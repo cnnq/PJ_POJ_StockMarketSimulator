@@ -7,68 +7,75 @@ import java.util.Map;
 public class Portfolio {
 
     private double cash;
-    private final Map<Stock, Integer> stocksInPortfolio;
+    private final Map<String, PortfolioPosition> positions;
 
     public Portfolio(double initialCash) {
+        if (initialCash < 0) throw new IllegalArgumentException("initialCash cannot be negative");
+
         this.cash = initialCash;
-        stocksInPortfolio = new HashMap<>();
+        positions = new HashMap<>();
     }
 
     /**
-     * Buys stocks
-     * @param stock    stock to buy
-     * @param quantity
-     * @return true if quantity of that stock can be bought, otherwise false
+     * Buys assets
+     * @param asset asset to be bought
+     * @param quantity quantity of assets to be bought
+     * @return true if bought successfully, false otherwise
      */
-    public boolean addStock(@NotNull Stock stock, int quantity) {
-        if (quantity <= 0 ||cash < stock.getInitialPrice() * quantity) {
+    public boolean addAsset(@NotNull Asset asset, int quantity) {
+        if (quantity <= 0 ||cash < asset.getCurrentPrice() * quantity) {
             return false;
         }
 
-        if (stocksInPortfolio.containsKey(stock)) {
-            stocksInPortfolio.replace(stock, stocksInPortfolio.get(stock) + quantity);
+        if (positions.containsKey(asset.getSymbol())) {
+            var position = positions.get(asset.getSymbol());
+            position = new PortfolioPosition(asset, position.quantity() + quantity);
+            positions.replace(asset.getSymbol(), position);
+
         } else {
-            stocksInPortfolio.put(stock, quantity);
+            var position = new PortfolioPosition(asset, quantity);
+            positions.put(asset.getSymbol(), position);
         }
 
-        cash -= stock.getInitialPrice() * quantity;
+        cash -= asset.getCurrentPrice() * quantity;
         return true;
     }
 
     /**
-     * Sells stocks
-     * @param stock    stock to sell
-     * @param quantity
-     * @return true if quantity of that stock can be sold, otherwise false
+     * Sells assets
+     * @param asset asset to be sold
+     * @param quantity quantity of that asset to be sold
+     * @return true if sold successfully, false otherwise
      */
-    public boolean removeStock(@NotNull Stock stock, int quantity) {
+    public boolean removeAsset(@NotNull Asset asset, int quantity) {
         if (quantity <= 0) {
             return false;
         }
 
-        Integer inPortfolioQuantity = stocksInPortfolio.get(stock);
+        PortfolioPosition position = positions.get(asset.getSymbol());
 
-        if (inPortfolioQuantity == null || quantity > inPortfolioQuantity) {
+        if (position == null || quantity > position.quantity()) {
             return false;
         }
 
-        if (quantity == inPortfolioQuantity) {
-            stocksInPortfolio.remove(stock);
+        if (quantity == position.quantity()) {
+            positions.remove(asset.getSymbol());
         } else {
-            stocksInPortfolio.replace(stock, inPortfolioQuantity - quantity);
+            position = new PortfolioPosition(asset, position.quantity() - quantity);
+            positions.replace(asset.getSymbol(), position);
         }
 
-        cash += stock.getInitialPrice() * quantity;
+        cash += asset.getCurrentPrice() * quantity;
         return true;
     }
 
     /**
-     * Calculate value of stocks in portfolio
+     * Calculate value of assets in portfolio
      */
-    public double calculateStockValue() {
+    public double calculateAssetsValue() {
         double result = 0;
-        for (var entry : stocksInPortfolio.entrySet()) {
-            result += entry.getKey().getInitialPrice() * entry.getValue();
+        for (var position : positions.values()) {
+            result += position.asset().getCurrentPrice() * position.quantity();
         }
         return result;
     }
@@ -77,7 +84,7 @@ public class Portfolio {
      * @return total value of portfolio (including cash and stocks)
      */
     public double calculateTotalValue() {
-        return calculateStockValue() + getCash();
+        return calculateAssetsValue() + getCash();
     }
 
     public double getCash() {
@@ -88,15 +95,18 @@ public class Portfolio {
      * @return unmodifiable map of stocks in portfolio
      */
     @NotNull
-    public Map<Stock, Integer> getStocksInPortfolio() {
-        return Collections.unmodifiableMap(stocksInPortfolio);
+    public Map<String, PortfolioPosition> getPositions() {
+        return Collections.unmodifiableMap(positions);
     }
 
     /**
-     * @param stock type of stock to quantify
-     * @return quantity of stocks
+     * @param asset type of asset to quantify
+     * @return quantity of asset
      */
-    public int getStockQuantity(@NotNull Stock stock) {
-        return stocksInPortfolio.getOrDefault(stock, 0);
+    public int getAssetQuantity(@NotNull Asset asset) {
+        PortfolioPosition position = positions.get(asset.getSymbol());
+        if (position == null) return 0;
+
+        return position.quantity();
     }
 }
