@@ -1,6 +1,9 @@
+package com.stockmarket.model;
+
+import com.stockmarket.market.Tradeable;
 import org.jetbrains.annotations.NotNull;
 
-public class Stock extends Asset {
+public class Stock extends Asset implements Tradeable {
 
     public Stock(@NotNull String symbol, @NotNull String name, double initialPrice) {
         super(symbol, name, initialPrice);

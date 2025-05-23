@@ -1,196 +1,223 @@
-import org.junit.jupiter.api.Assertions;
+import com.stockmarket.exception.AssetNotFoundException;
+import com.stockmarket.exception.InsufficientAssetsException;
+import com.stockmarket.exception.InsufficientFundsException;
+import com.stockmarket.market.Market;
+import com.stockmarket.model.Asset;
+import com.stockmarket.model.Stock;
+import com.stockmarket.portfolio.Portfolio;
+import org.junit.jupiter.api.*;
+
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
 
 class PortfolioTest {
 
-    @org.junit.jupiter.api.Test
-    void testAddAsset_EnoughCash() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+    static final String NVDA = "NVDA";
+    static final String TSLA = "TSLR";
+    static final String INTC = "INTC";
+    static final String NON_EXISTENT = "NON_EXISTENT";
 
-        boolean succeed = portfolio.addAsset(nvda, 2);
+    Market market;
+    Portfolio portfolio;
 
-        Assertions.assertTrue(succeed);
-        Assertions.assertEquals(50, portfolio.getCash());
-        Assertions.assertEquals(2, portfolio.getAssetQuantity(nvda));
+    @BeforeEach
+    void setUp() {
+        List<Asset> assetList = new ArrayList<>();
+        assetList.add(new Stock(NVDA, "Nvidia", 100));
+        assetList.add(new Stock(TSLA, "Tesla, Inc.", 250));
+        assetList.add(new Stock(INTC, "Intel Corporation", 20));
+
+        market = new Market(assetList);
+        portfolio = new Portfolio(250);
     }
 
-    @org.junit.jupiter.api.Test
-    void testAddAsset_NotEnoughCash() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+    @Test
+    void testBuy_EnoughCash() {
+        Assertions.assertDoesNotThrow(() -> portfolio.buy(NVDA, 2, market));
 
-        boolean succeed = portfolio.addAsset(nvda, 3);
-
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(250, portfolio.getCash());
-        Assertions.assertEquals(0, portfolio.getAssetQuantity(nvda));
-
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(50, portfolio.getCash()),
+                () -> Assertions.assertEquals(2, portfolio.getAssetQuantity(NVDA))
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testAddAsset_ZeroQuantity() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+    @Test
+    void testBuy_NotEnoughCash() {
+        Assertions.assertThrows(InsufficientFundsException.class, () -> portfolio.buy(NVDA, 3, market));
 
-        boolean succeed = portfolio.addAsset(nvda, 0);
-
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(250, portfolio.getCash());
-        Assertions.assertEquals(0, portfolio.getAssetQuantity(nvda));
-
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(250, portfolio.getCash()),
+                () -> Assertions.assertTrue(portfolio.getPositions().isEmpty())
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testAddAsset_NegativeQuantity() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+    @Test
+    void testBuy_ZeroQuantity() {
+        Assertions.assertDoesNotThrow(() -> portfolio.buy(NVDA, 0, market));
 
-        boolean succeed = portfolio.addAsset(nvda, -1);
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(250, portfolio.getCash()),
+                () -> Assertions.assertTrue(portfolio.getPositions().isEmpty())
+        );
+    }
 
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(250, portfolio.getCash());
-        Assertions.assertEquals(0, portfolio.getAssetQuantity(nvda));
+    @Test
+    void testBuy_NegativeQuantity() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> portfolio.buy(NVDA, -1, market));
 
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(250, portfolio.getCash()),
+                () -> Assertions.assertTrue(portfolio.getPositions().isEmpty())
+        );
+    }
+
+    @Test
+    void testBuy_NonExistentAsset() {
+        Assertions.assertThrows(AssetNotFoundException.class, () -> portfolio.buy(NON_EXISTENT, 2, market));
+
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(250, portfolio.getCash()),
+                () -> Assertions.assertTrue(portfolio.getPositions().isEmpty())
+        );
     }
 
 
-    @org.junit.jupiter.api.Test
-    void testRemoveAsset_AssetCanBeRemoved() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        portfolio.addAsset(nvda, 2);
+    @Test
+    void testSell_CanBeSold() {
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        boolean succeed = portfolio.removeAsset(nvda, 1);
+        Assertions.assertDoesNotThrow(() -> portfolio.sell(NVDA, 1, market));
 
-        Assertions.assertTrue(succeed);
-        Assertions.assertEquals(150, portfolio.getCash());
-        Assertions.assertEquals(1, portfolio.getAssetQuantity(nvda));
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(150, portfolio.getCash()),
+                () -> Assertions.assertEquals(1, portfolio.getAssetQuantity(NVDA))
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testRemoveAsset_NoAssetToRemove() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+    @Test
+    void testSell_NoAssetToBeSold() {
+        Assertions.assertThrows(AssetNotFoundException.class, () -> portfolio.sell(NVDA, 1, market));
 
-        boolean succeed = portfolio.removeAsset(nvda, 1);
-
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(250, portfolio.getCash());
-        Assertions.assertEquals(0, portfolio.getAssetQuantity(nvda));
-
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(250, portfolio.getCash()),
+                () -> Assertions.assertTrue(portfolio.getPositions().isEmpty())
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testRemoveAsset_TryToRemoveTooManyAssets() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        portfolio.addAsset(nvda, 2);
+    @Test
+    void testSell_TriedToSellTooManyAssets() {
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        boolean succeed = portfolio.removeAsset(nvda, 3);
+        Assertions.assertThrows(InsufficientAssetsException.class, () -> portfolio.sell(NVDA, 3, market));
 
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(50, portfolio.getCash());
-        Assertions.assertEquals(2, portfolio.getAssetQuantity(nvda));
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(50, portfolio.getCash()),
+                () -> Assertions.assertEquals(2, portfolio.getAssetQuantity(NVDA))
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testRemoveAsset_ZeroQuantity() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        portfolio.addAsset(nvda, 2);
+    @Test
+    void testSell_ZeroQuantity() {
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        boolean succeed = portfolio.removeAsset(nvda, 0);
+        Assertions.assertDoesNotThrow(() -> portfolio.sell(NVDA, 0, market));
 
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(50, portfolio.getCash());
-        Assertions.assertEquals(2, portfolio.getAssetQuantity(nvda));
-
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(50, portfolio.getCash()),
+                () -> Assertions.assertEquals(2, portfolio.getAssetQuantity(NVDA))
+        );
     }
 
-    @org.junit.jupiter.api.Test
-    void testRemoveAsset_NegativeQuantity() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        portfolio.addAsset(nvda, 2);
+    @Test
+    void testSell_NegativeQuantity() {
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        boolean succeed = portfolio.addAsset(nvda, -1);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> portfolio.sell(NVDA, -1, market));
 
-        Assertions.assertFalse(succeed);
-        Assertions.assertEquals(50, portfolio.getCash());
-        Assertions.assertEquals(2, portfolio.getAssetQuantity(nvda));
+        // Nothing changed
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(50, portfolio.getCash()),
+                () -> Assertions.assertEquals(2, portfolio.getAssetQuantity(NVDA))
+        );
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testCalculateAssetsValue_NoAssets() {
-        Portfolio portfolio = new Portfolio(250);
-
-        double value = portfolio.calculateAssetsValue();
-
-        Assertions.assertEquals(0, value);
+        Assertions.assertEquals(0, portfolio.calculateAssetsValue());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testCalculateAssetValue_OneTypeOfAssets() {
-        Portfolio portfolio = new Portfolio(250);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        portfolio.addAsset(nvda, 2);
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        double value = portfolio.calculateAssetsValue();
-
-        Assertions.assertEquals(200, value);
+        Assertions.assertEquals(200, portfolio.calculateAssetsValue());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testCalculateAssetValue_MoreTypesOfAssets() {
-        Portfolio portfolio = new Portfolio(1000);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        Stock tsla = new Stock("TSLA", "Tesla, Inc.", 250);
-        Stock intc = new Stock("INTC", "Intel Corporation", 20);
+        try {
+            portfolio.buy(NVDA, 1, market);
+            portfolio.buy(INTC, 4, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        portfolio.addAsset(nvda, 2);
-        portfolio.addAsset(tsla, 1);
-        portfolio.addAsset(intc, 5);
-
-        double value = portfolio.calculateAssetsValue();
-
-        Assertions.assertEquals(550, value);
+        Assertions.assertEquals(180, portfolio.calculateAssetsValue());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testCalculateTotalValue() {
-        Portfolio portfolio = new Portfolio(1000);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-        Stock tsla = new Stock("TSLA", "Tesla, Inc.", 250);
-        Stock intc = new Stock("INTC", "Intel Corporation", 20);
+        try {
+            portfolio.buy(NVDA, 1, market);
+            portfolio.buy(INTC, 4, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        portfolio.addAsset(nvda, 2);
-        portfolio.addAsset(tsla, 1);
-        portfolio.addAsset(intc, 5);
-
-        double value = portfolio.calculateTotalValue();
-
-        Assertions.assertEquals(1000, value);
+        Assertions.assertEquals(250, portfolio.calculateTotalValue());
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGetAssetQuantity_AssetsExist() {
-        Portfolio portfolio = new Portfolio(1000);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
+        try {
+            portfolio.buy(NVDA, 2, market);
+        } catch (Exception e){
+            Assertions.fail("Problem while buying assets");
+        }
 
-        portfolio.addAsset(nvda, 2);
-
-        int quantity = portfolio.getAssetQuantity(nvda);
-
-        Assertions.assertEquals(2, quantity);
+        Assertions.assertEquals(2, portfolio.getAssetQuantity(NVDA));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void testGetAssetQuantity_NoAssets() {
-        Portfolio portfolio = new Portfolio(1000);
-        Stock nvda = new Stock("NVDA", "Nvidia", 100);
-
-        int quantity = portfolio.getAssetQuantity(nvda);
-
-        Assertions.assertEquals(0, quantity);
+        Assertions.assertEquals(0, portfolio.getAssetQuantity(NVDA));
     }
 }

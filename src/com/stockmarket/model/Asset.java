@@ -1,3 +1,5 @@
+package com.stockmarket.model;
+
 import org.jetbrains.annotations.NotNull;
 
 public abstract class Asset {
@@ -14,7 +16,7 @@ public abstract class Asset {
         this.currentPrice = initialPrice;
     }
 
-    abstract void updatePrice();
+    public abstract void updatePrice();
 
     @NotNull
     public String getSymbol() {

@@ -1,6 +1,9 @@
+package com.stockmarket.model;
+
+import com.stockmarket.market.Tradeable;
 import org.jetbrains.annotations.NotNull;
 
-public class Bond extends Asset {
+public class Bond extends Asset implements Tradeable {
 
     private double interestRate;
 
