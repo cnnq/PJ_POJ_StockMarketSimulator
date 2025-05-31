@@ -12,6 +12,7 @@ public class Market {
     public Market(@NotNull List<Asset> assetList) {
         assetMap = new HashMap<>();
         for (Asset asset : assetList) {
+            if (asset == null) continue;
             assetMap.put(asset.getSymbol(), asset);
         }
     }
