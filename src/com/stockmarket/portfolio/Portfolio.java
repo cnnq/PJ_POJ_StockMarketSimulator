@@ -50,7 +50,7 @@ public class Portfolio {
 
         double price = tradeable.getCurrentPrice();
 
-        if (cash < price * quantity) throw new InsufficientFundsException("Asset of symbol: " + symbol + " cannot be bought, owned cash: " + cash + ", needed cash: " + price * quantity);
+        if (cash < price * quantity) throw new InsufficientFundsException(symbol, cash, price * quantity);
 
         cash -= price * quantity;
         addAsset(asset, quantity);
@@ -68,9 +68,9 @@ public class Portfolio {
         if (quantity < 0) throw new IllegalArgumentException("quantity cannot be negative");
 
         if (positions.get(symbol) == null) throw new AssetNotFoundException("Asset of symbol: " + symbol + " not found in portfolio");
-        if (positions.get(symbol).quantity() < quantity) throw new InsufficientAssetsException("Cannot sell " + quantity + " of " + symbol + " asset");
+        if (positions.get(symbol).quantity() < quantity) throw new InsufficientAssetsException(symbol, quantity);
 
-        Asset asset = market.getAsset(symbol).orElseThrow(() -> new AssetNotFoundException("Asset of symbol: " + symbol + " not found in market"));
+        Asset asset = market.getAsset(symbol).orElseThrow(() -> new AssetNotFoundException(symbol));
         if (!(asset instanceof Tradeable tradeable) || quantity == 0) return;
 
         double price = tradeable.getCurrentPrice();
