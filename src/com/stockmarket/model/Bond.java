@@ -7,6 +7,9 @@ public class Bond extends Asset implements Tradeable {
 
     private double interestRate;
 
+    // Required by Jackson
+    public Bond() {}
+
     public Bond(@NotNull String symbol, @NotNull String name, double initialPrice, double interestRate) {
         super(symbol, name, initialPrice);
 

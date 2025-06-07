@@ -1,12 +1,26 @@
 package com.stockmarket.model;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.jetbrains.annotations.NotNull;
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = Stock.class, name = "stock"),
+    @JsonSubTypes.Type(value = Bond.class, name = "bond")
+})
 public abstract class Asset {
 
     protected final String symbol;
     protected final String name;
     protected double currentPrice;
+
+    // Required by Jackson
+    public Asset() { symbol = null; name = null; }
 
     public Asset(@NotNull String symbol, @NotNull String name, double initialPrice) {
         if (initialPrice < 0) throw new IllegalArgumentException("initialPrice cannot be negative");

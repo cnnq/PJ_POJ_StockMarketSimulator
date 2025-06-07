@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class Stock extends Asset implements Tradeable {
 
+    // Required by Jackson
+    public Stock() {}
+
     public Stock(@NotNull String symbol, @NotNull String name, double initialPrice) {
         super(symbol, name, initialPrice);
     }
