@@ -16,6 +16,17 @@ public class Portfolio {
     private double cash;
     private final Map<String, PortfolioPosition> positions;
 
+    /**
+     * Create portfolio with cash set to 0
+     */
+    public Portfolio() {
+        this(0);
+    }
+
+    /**
+     * Create instance of portfolio
+     * @param initialCash non-negative cash value
+     */
     public Portfolio(double initialCash) {
         if (initialCash < 0) throw new IllegalArgumentException("initialCash cannot be negative");
 

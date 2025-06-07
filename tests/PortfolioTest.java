@@ -7,7 +7,6 @@ import com.stockmarket.model.Stock;
 import com.stockmarket.portfolio.Portfolio;
 import org.junit.jupiter.api.*;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 

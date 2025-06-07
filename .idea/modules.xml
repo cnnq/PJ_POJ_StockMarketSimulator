@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SimpleStockMarketSimulator.iml" filepath="$PROJECT_DIR$/SimpleStockMarketSimulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PJATK_SimpleStockMarketSimulator.iml" filepath="$PROJECT_DIR$/PJATK_SimpleStockMarketSimulator.iml" />
     </modules>
   </component>
 </project>

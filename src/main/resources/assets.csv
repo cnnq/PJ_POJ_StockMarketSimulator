@@ -1,0 +1,6 @@
+symbol,name,type,initial_price
+AAPL,Apple Inc.,STOCK,150.00
+GOOGL,Alphabet Inc.,STOCK,2800.00
+MSFT,Microsoft Corporation,STOCK,300.00
+BOND1,Government Bond 10Y,BOND,1000.00
+BOND2,Corporate Bond 5Y,BOND,950.00
