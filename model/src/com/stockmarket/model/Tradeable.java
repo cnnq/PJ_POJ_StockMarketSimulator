@@ -1,4 +1,4 @@
-package com.stockmarket.market;
+package com.stockmarket.model;
 
 import org.jetbrains.annotations.NotNull;
 

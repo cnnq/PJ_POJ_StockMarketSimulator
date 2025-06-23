@@ -2,7 +2,7 @@ package com.stockmarket.portfolio;
 
 import com.stockmarket.exception.*;
 import com.stockmarket.market.Market;
-import com.stockmarket.market.Tradeable;
+import com.stockmarket.model.Tradeable;
 import com.stockmarket.model.Asset;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;

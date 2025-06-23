@@ -1,6 +1,5 @@
 package com.stockmarket.model;
 
-import com.stockmarket.market.Tradeable;
 import org.jetbrains.annotations.NotNull;
 
 public class Stock extends Asset implements Tradeable {
